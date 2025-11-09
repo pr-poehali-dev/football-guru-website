@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,8 +11,8 @@ interface Room {
   id: number;
   team1: string;
   team2: string;
-  team1Icon: string;
-  team2Icon: string;
+  team1Logo: string;
+  team2Logo: string;
   onlineCount: number;
   votes: {
     p1: number;
@@ -21,15 +22,16 @@ interface Room {
 }
 
 const mockRooms: Room[] = [
-  { id: 1, team1: 'Манчестер Сити', team2: 'Арсенал', team1Icon: '🔵', team2Icon: '🔴', onlineCount: 247, votes: { p1: 124, x: 45, p2: 78 } },
-  { id: 2, team1: 'Реал Мадрид', team2: 'Барселона', team1Icon: '⚪', team2Icon: '🔵', onlineCount: 532, votes: { p1: 234, x: 98, p2: 200 } },
-  { id: 3, team1: 'Бавария', team2: 'Боруссия', team1Icon: '🔴', team2Icon: '🟡', onlineCount: 189, votes: { p1: 95, x: 32, p2: 62 } },
-  { id: 4, team1: 'ПСЖ', team2: 'Марсель', team1Icon: '🔵', team2Icon: '⚪', onlineCount: 312, votes: { p1: 156, x: 67, p2: 89 } },
-  { id: 5, team1: 'Ливерпуль', team2: 'Челси', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 428, votes: { p1: 198, x: 89, p2: 141 } },
-  { id: 6, team1: 'Милан', team2: 'Интер', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 276, votes: { p1: 132, x: 54, p2: 90 } },
+  { id: 1, team1: 'Манчестер Сити', team2: 'Арсенал', team1Logo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', onlineCount: 247, votes: { p1: 124, x: 45, p2: 78 } },
+  { id: 2, team1: 'Реал Мадрид', team2: 'Барселона', team1Logo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', onlineCount: 532, votes: { p1: 234, x: 98, p2: 200 } },
+  { id: 3, team1: 'Бавария', team2: 'Боруссия', team1Logo: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg', onlineCount: 189, votes: { p1: 95, x: 32, p2: 62 } },
+  { id: 4, team1: 'ПСЖ', team2: 'Марсель', team1Logo: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Olympique_Marseille_logo.svg', onlineCount: 312, votes: { p1: 156, x: 67, p2: 89 } },
+  { id: 5, team1: 'Ливерпуль', team2: 'Челси', team1Logo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg', onlineCount: 428, votes: { p1: 198, x: 89, p2: 141 } },
+  { id: 6, team1: 'Милан', team2: 'Интер', team1Logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg', team2Logo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg', onlineCount: 276, votes: { p1: 132, x: 54, p2: 90 } },
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -64,6 +66,8 @@ export default function Index() {
   const handleRoomClick = (roomId: number) => {
     if (!isLoggedIn) {
       setShowAuthDialog(true);
+    } else {
+      navigate(`/room/${roomId}`);
     }
   };
 
@@ -72,8 +76,8 @@ export default function Index() {
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center animate-pulse-glow">
-              <span className="text-2xl">⚽</span>
+            <div className="w-12 h-12 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center shadow-lg shadow-primary/50">
+              <span className="text-3xl animate-spin-ball">⚽</span>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               ФУТБОЛ ГУРУ
@@ -116,7 +120,7 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 max-w-4xl">
+        <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
           {mockRooms.map((room, index) => {
             const totalVotes = room.votes.p1 + room.votes.x + room.votes.p2;
             const p1Percent = calculatePercentage(room.votes.p1, totalVotes);
@@ -138,21 +142,21 @@ export default function Index() {
                     
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-2xl shrink-0">{room.team1Icon}</span>
+                        <img src={room.team1Logo} alt={room.team1} className="w-8 h-8 object-contain shrink-0" />
                         <span className="font-semibold text-sm truncate">{room.team1}</span>
                       </div>
                       
                       <span className="text-muted-foreground font-bold text-sm shrink-0">VS</span>
                       
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-2xl shrink-0">{room.team2Icon}</span>
+                        <img src={room.team2Logo} alt={room.team2} className="w-8 h-8 object-contain shrink-0" />
                         <span className="font-semibold text-sm truncate">{room.team2}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md shrink-0">
                       <div className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></div>
-                      <span className="text-secondary font-semibold text-xs">{room.onlineCount}</span>
+                      <span className="text-secondary font-semibold text-xs">{room.onlineCount} онлайн</span>
                     </div>
                   </div>
 
