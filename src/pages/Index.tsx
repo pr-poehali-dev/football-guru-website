@@ -13,15 +13,20 @@ interface Room {
   team1Icon: string;
   team2Icon: string;
   onlineCount: number;
+  votes: {
+    p1: number;
+    x: number;
+    p2: number;
+  };
 }
 
 const mockRooms: Room[] = [
-  { id: 1, team1: 'Манчестер Сити', team2: 'Арсенал', team1Icon: '🔵', team2Icon: '🔴', onlineCount: 247 },
-  { id: 2, team1: 'Реал Мадрид', team2: 'Барселона', team1Icon: '⚪', team2Icon: '🔵', onlineCount: 532 },
-  { id: 3, team1: 'Бавария', team2: 'Боруссия', team1Icon: '🔴', team2Icon: '🟡', onlineCount: 189 },
-  { id: 4, team1: 'ПСЖ', team2: 'Марсель', team1Icon: '🔵', team2Icon: '⚪', onlineCount: 312 },
-  { id: 5, team1: 'Ливерпуль', team2: 'Челси', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 428 },
-  { id: 6, team1: 'Милан', team2: 'Интер', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 276 },
+  { id: 1, team1: 'Манчестер Сити', team2: 'Арсенал', team1Icon: '🔵', team2Icon: '🔴', onlineCount: 247, votes: { p1: 124, x: 45, p2: 78 } },
+  { id: 2, team1: 'Реал Мадрид', team2: 'Барселона', team1Icon: '⚪', team2Icon: '🔵', onlineCount: 532, votes: { p1: 234, x: 98, p2: 200 } },
+  { id: 3, team1: 'Бавария', team2: 'Боруссия', team1Icon: '🔴', team2Icon: '🟡', onlineCount: 189, votes: { p1: 95, x: 32, p2: 62 } },
+  { id: 4, team1: 'ПСЖ', team2: 'Марсель', team1Icon: '🔵', team2Icon: '⚪', onlineCount: 312, votes: { p1: 156, x: 67, p2: 89 } },
+  { id: 5, team1: 'Ливерпуль', team2: 'Челси', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 428, votes: { p1: 198, x: 89, p2: 141 } },
+  { id: 6, team1: 'Милан', team2: 'Интер', team1Icon: '🔴', team2Icon: '🔵', onlineCount: 276, votes: { p1: 132, x: 54, p2: 90 } },
 ];
 
 export default function Index() {
@@ -30,16 +35,30 @@ export default function Index() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [userVotes, setUserVotes] = useState<{[key: number]: 'p1' | 'x' | 'p2'}>({});
 
   const handleAuth = () => {
-    if (username && password) {
+    if (username && password && (!isRegistering || phone)) {
       setIsLoggedIn(true);
       setShowAuthDialog(false);
       setUsername('');
       setPassword('');
-      setEmail('');
+      setPhone('');
     }
+  };
+
+  const handleVote = (roomId: number, vote: 'p1' | 'x' | 'p2', e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isLoggedIn) {
+      setUserVotes(prev => ({...prev, [roomId]: vote}));
+    } else {
+      setShowAuthDialog(true);
+    }
+  };
+
+  const calculatePercentage = (votes: number, total: number) => {
+    return total > 0 ? Math.round((votes / total) * 100) : 0;
   };
 
   const handleRoomClick = (roomId: number) => {
@@ -97,60 +116,88 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockRooms.map((room, index) => (
-            <Card 
-              key={room.id}
-              onClick={() => handleRoomClick(room.id)}
-              className="p-6 bg-card/90 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 animate-scale-in group"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <div className="bg-primary/10 px-3 py-1 rounded-full">
-                  <span className="text-primary font-bold text-sm">КОМНАТА {room.id}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-secondary/10 px-3 py-1 rounded-full">
-                  <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
-                  <span className="text-secondary font-semibold text-sm">{room.onlineCount} online</span>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 gap-4 max-w-4xl">
+          {mockRooms.map((room, index) => {
+            const totalVotes = room.votes.p1 + room.votes.x + room.votes.p2;
+            const p1Percent = calculatePercentage(room.votes.p1, totalVotes);
+            const xPercent = calculatePercentage(room.votes.x, totalVotes);
+            const p2Percent = calculatePercentage(room.votes.p2, totalVotes);
+            
+            return (
+              <Card 
+                key={room.id}
+                onClick={() => handleRoomClick(room.id)}
+                className="p-4 bg-card/90 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-primary/10 animate-scale-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="bg-primary/10 px-2 py-1 rounded-md shrink-0">
+                      <span className="text-primary font-bold text-xs">КОМНАТА {room.id}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-2xl shrink-0">{room.team1Icon}</span>
+                        <span className="font-semibold text-sm truncate">{room.team1}</span>
+                      </div>
+                      
+                      <span className="text-muted-foreground font-bold text-sm shrink-0">VS</span>
+                      
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-2xl shrink-0">{room.team2Icon}</span>
+                        <span className="font-semibold text-sm truncate">{room.team2}</span>
+                      </div>
+                    </div>
 
-              <div className="flex items-center justify-between mb-6">
-                <div className="text-center flex-1">
-                  <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">{room.team1Icon}</div>
-                  <h3 className="font-bold text-sm">{room.team1}</h3>
-                </div>
-                
-                <div className="text-3xl font-bold text-muted-foreground mx-4">VS</div>
-                
-                <div className="text-center flex-1">
-                  <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">{room.team2Icon}</div>
-                  <h3 className="font-bold text-sm">{room.team2}</h3>
-                </div>
-              </div>
+                    <div className="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-md shrink-0">
+                      <div className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></div>
+                      <span className="text-secondary font-semibold text-xs">{room.onlineCount}</span>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  variant="outline" 
-                  className="bg-primary/10 border-primary/30 hover:bg-primary hover:text-primary-foreground font-bold transition-all"
-                >
-                  П1
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="bg-secondary/10 border-secondary/30 hover:bg-secondary hover:text-secondary-foreground font-bold transition-all"
-                >
-                  Х
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="bg-accent/10 border-accent/30 hover:bg-accent hover:text-accent-foreground font-bold transition-all"
-                >
-                  П2
-                </Button>
-              </div>
-            </Card>
-          ))}
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => handleVote(room.id, 'p1', e)}
+                      className={`w-20 h-8 text-xs font-bold transition-all ${
+                        userVotes[room.id] === 'p1' 
+                          ? 'bg-primary text-primary-foreground border-primary' 
+                          : 'bg-primary/10 border-primary/30 hover:bg-primary hover:text-primary-foreground'
+                      }`}
+                    >
+                      П1 {p1Percent}%
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => handleVote(room.id, 'x', e)}
+                      className={`w-20 h-8 text-xs font-bold transition-all ${
+                        userVotes[room.id] === 'x' 
+                          ? 'bg-secondary text-secondary-foreground border-secondary' 
+                          : 'bg-secondary/10 border-secondary/30 hover:bg-secondary hover:text-secondary-foreground'
+                      }`}
+                    >
+                      Х {xPercent}%
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => handleVote(room.id, 'p2', e)}
+                      className={`w-20 h-8 text-xs font-bold transition-all ${
+                        userVotes[room.id] === 'p2' 
+                          ? 'bg-accent text-accent-foreground border-accent' 
+                          : 'bg-accent/10 border-accent/30 hover:bg-accent hover:text-accent-foreground'
+                      }`}
+                    >
+                      П2 {p2Percent}%
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
 
         {!isLoggedIn && (
@@ -194,13 +241,13 @@ export default function Index() {
             
             {isRegistering && (
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="phone">Номер телефона</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Введите email"
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+7 (___) ___-__-__"
                   className="mt-1"
                 />
               </div>
